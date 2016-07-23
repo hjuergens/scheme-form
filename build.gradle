@@ -1,0 +1,29 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = 'io.github.hjuergens'
+version = '0.0.1-SNAPSHOT'
+
+description = """scheme-form"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+repositories {
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-smile', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-jaxb-annotations', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-jsonSchema', version:'2.7.1'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version:'2.6.3'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version:'2.6.1'
+    compile group: 'com.beust', name: 'jcommander', version:'1.48'
+    compile group: 'com.intellij', name: 'annotations', version:'12.0'
+}
