@@ -126,7 +126,6 @@
     <xsl:element name="input">
       <xsl:attribute name="type">
         <xsl:call-template name="formType">
-
           <xsl:with-param name="xsdType">
             <xsl:value-of select="$input-type"/>
           </xsl:with-param>
@@ -164,7 +163,7 @@
 
     <xsl:apply-templates select="//xs:simpleType[@name=$typeName] | //xs:complexType[@name=$typeName]">
       <xsl:with-param name="input-id" select="$input-id"/>
-      <xsl:with-param name="input-name" select="@name"/>
+      <xsl:with-param name="name" select="@name"/>
       <xsl:with-param name="legendText" select="@name"/>
     </xsl:apply-templates>
 
@@ -185,25 +184,28 @@
     <xsl:param name="input-id"><xsl:apply-templates select="." mode="getId"/></xsl:param>
 
     <xsl:if test="not(@name)"><xsl:message>missing name in <xsl:copy-of select="current()"/></xsl:message></xsl:if>
-    <xsl:comment>Primitive Type (type='<xsl:value-of select="@type"/>',name='<xsl:value-of select="@name"/>')</xsl:comment>
+    <xsl:comment>Primitive Type (type='<xsl:value-of select="@type"/>',name='<xsl:value-of select="@name"/>',input-id='<xsl:value-of select="$input-id"/>')</xsl:comment>
 
     <xsl:variable name="typeName"><xsl:value-of select="substring-after(@type,':')"/></xsl:variable>
 
     <xsl:variable name="xmlSchema" select="document('../../main/resources/XMLSchema.xsd')/xs:schema"/>
 
-    <!--<xsl:variable name="simpleTypeString"><xsl:value-of select="$xmlSchema/xs:simpleType[@name=$typeName]/@id"/></xsl:variable>-->
-    <!--<xsl:message><xsl:value-of select="$simpleTypeString"/></xsl:message>-->
-
     <xsl:message>$typeName:'<xsl:value-of select="$typeName"/>'</xsl:message>
 
+    <xsl:variable name="name">
+      <xsl:call-template name="name-path"/>
+    </xsl:variable>
 
-    <xsl:apply-templates select="$xmlSchema/xs:simpleType[@name=$typeName]" />
-
-    <!--xsl:apply-templates select="//xs:simpleType[@name=$typeName]">
-      <xsl:with-param name="input-id" select="$input-id"/>
-      <xsl:with-param name="id" select="$input-id"/>
-      <xsl:with-param name="input-name" select="@name"/>
-    </xsl:apply-templates-->
+    <xsl:element name="label">
+      <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
+      <!--<xsl:value-of select="$name"/>-->
+      <xsl:for-each select="ancestor-or-self::*/@name"><xsl:value-of select="concat( ' ', concat(translate(substring(.,1,1), $vLower, $vUpper),substring(., 2)) )"/></xsl:for-each>
+      <!--concat(translate(substring(.,1,1), $vLower, $vUpper),substring(., 2))-->
+      <xsl:apply-templates select="$xmlSchema/xs:simpleType[@name=$typeName]">
+          <xsl:with-param name="input-id"><xsl:value-of select="$input-id"/></xsl:with-param>
+          <xsl:with-param name="name"><xsl:value-of select="$name"/></xsl:with-param>
+        </xsl:apply-templates>
+    </xsl:element>
 
   </xsl:template>
 
@@ -212,14 +214,15 @@
     <xsl:param name="input-id"><xsl:apply-templates select="." mode="getId"/></xsl:param>
 
     <xsl:if test="not(@name)"><xsl:message>missing name in <xsl:copy-of select="current()"/></xsl:message></xsl:if>
-    <xsl:comment>Russian Doll (name='<xsl:value-of select="@name"/>')</xsl:comment>
+    <xsl:comment>Russian Doll (name='<xsl:value-of select="@name"/>', input-id='<xsl:value-of select="$input-id"/>')</xsl:comment>
 
     <xsl:variable name="name">
       <xsl:value-of select="concat(translate(substring(@name,1,1), $vLower, $vUpper),substring(@name, 2))"/>
     </xsl:variable>
 
     <xsl:apply-templates select="child::node()">
-      <xsl:with-param name="input-name" select="$name"/>
+      <xsl:with-param name="input-id" select="$input-id"/>
+      <xsl:with-param name="name" select="$name"/>
       <xsl:with-param name="legendText">
         <xsl:value-of select="concat(translate(substring(@name,1,1), $vLower, $vUpper),substring(@name, 2))"/>
       </xsl:with-param>
@@ -242,7 +245,6 @@
       <xsl:with-param name="input-id">ref_<xsl:call-template name="name-path"/></xsl:with-param>
     </xsl:apply-templates>
   </xsl:template>
-
 
   <!--
   <all
@@ -359,20 +361,25 @@ any attributes
   <!-- (annotation?,(restriction|list|union)) -->
   <xsl:template match="xs:simpleType">
     <xsl:param name="input-id"/>
+    <xsl:param name="name" />
 
-    <xsl:apply-templates select="xs:annotation"/>
+    <!--xsl:apply-templates select="xs:annotation"/-->
 
-    <xsl:element name="div">
-      <xsl:attribute name="class">simpleType</xsl:attribute>
-        <xsl:apply-templates select="xs:restriction | xs:list | xs:union">
-          <xsl:with-param name="input-id"><xsl:value-of select="$input-id"/></xsl:with-param>
-        </xsl:apply-templates>
-    </xsl:element>
+    <xsl:comment>simpleType(input-id='<xsl:value-of select="$input-id"/>', name='<xsl:value-of select="$name"/>')</xsl:comment>
+
+    <xsl:apply-templates select="xs:restriction | xs:list | xs:union">
+      <xsl:with-param name="input-id"><xsl:value-of select="$input-id"/></xsl:with-param>
+      <xsl:with-param name="name"><xsl:value-of select="$name"/></xsl:with-param>
+    </xsl:apply-templates>
   </xsl:template>
 
   <!-- (annotation?,(simpleType*)) -->
   <xsl:template match="xs:simpleType/xs:union">
     <xsl:param name="input-id"/>
+    <xsl:param name="name"/>
+
+    <xsl:comment>xs:simpleType/xs:union(input-id='<xsl:value-of select="$input-id"/>', name='<xsl:value-of select="$name"/>')
+    </xsl:comment>
 
     <xsl:element name="form">
       <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
@@ -380,7 +387,14 @@ any attributes
         <xsl:value-of select="$input-id"/>
         <xsl:text>.value=</xsl:text>
         <xsl:for-each select="xs:simpleType/xs:restriction/@base">
-          <xsl:value-of select="$input-id"/><xsl:value-of select="position()"/>
+          <xsl:choose>
+            <xsl:when test="current()/ancestor-or-self::xs:simpleType[@id][1]/@id">
+              <xsl:value-of select="current()/ancestor-or-self::xs:simpleType[@id][1]/@id"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$input-id"/><xsl:value-of select="position()"/>
+            </xsl:otherwise>
+          </xsl:choose>
           <xsl:text>.value</xsl:text>
           <xsl:if test="position() != last()">
             <xsl:text> + </xsl:text>
@@ -390,12 +404,26 @@ any attributes
       </xsl:attribute>
 
       <xsl:for-each select="xs:simpleType">
-        <xsl:variable name="input-id">
-          <xsl:value-of select="$input-id"/><xsl:value-of select="position()"/>
+        <xsl:variable name="input-id-loop">
+          <xsl:choose>
+            <xsl:when test="current()/ancestor-or-self::xs:simpleType[@id][1]/@id">
+              <xsl:value-of select="current()/ancestor-or-self::xs:simpleType[@id][1]/@id"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="$input-id"/><xsl:value-of select="position()"/>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:variable name="name-loop">
+          <xsl:value-of select="$name"/><xsl:value-of select="position()"/>
         </xsl:variable>
 
+        <xsl:comment>input-id='<xsl:value-of select="$input-id-loop"/>', name='<xsl:value-of select="$name-loop"/>'
+        </xsl:comment>
+
         <xsl:apply-templates select="current()">
-          <xsl:with-param name="input-id" select="$input-id"/>
+          <xsl:with-param name="input-id"><xsl:value-of select="$input-id-loop"/></xsl:with-param>
+          <xsl:with-param name="name"><xsl:value-of select="$name-loop"/></xsl:with-param>
         </xsl:apply-templates>
       </xsl:for-each>
 
@@ -403,10 +431,16 @@ any attributes
         <xsl:attribute name="name">
           <xsl:value-of select="$input-id"/>
         </xsl:attribute>
-
         <xsl:attribute name="for">
           <xsl:for-each select="xs:simpleType/xs:restriction/@base">
-            <xsl:value-of select="$input-id"/><xsl:value-of select="position()"/>
+            <xsl:choose>
+              <xsl:when test="current()/ancestor-or-self::xs:simpleType[@id][1]/@id">
+                <xsl:value-of select="current()/ancestor-or-self::xs:simpleType[@id][1]/@id"/>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:value-of select="$input-id"/><xsl:value-of select="position()"/>
+              </xsl:otherwise>
+            </xsl:choose>
             <xsl:if test="position() != last()">
               <xsl:text> </xsl:text>
             </xsl:if>
@@ -486,15 +520,12 @@ any attributes
   </xsl:template>
 
   <xsl:template match="xs:simpleType/xs:restriction[attribute::base]">
-    <xsl:param name="input-id"><xsl:call-template name="name-path"/></xsl:param>
+    <xsl:param name="input-id"/><!--xsl:call-template name="create-id"/></xsl:param-->
+    <xsl:param name="name"/><!--xsl:call-template name="name-path"/></xsl:param-->
     <xsl:comment>xs:simpleType/xs:restriction[attribute::base=<xsl:value-of select="@base" /> ]</xsl:comment>
     <xsl:apply-templates select="@base">
-      <xsl:with-param name="id">
-        <xsl:value-of select="$input-id"/>
-      </xsl:with-param>
-      <xsl:with-param name="name">
-        <xsl:call-template name="name-path"/>
-      </xsl:with-param>
+      <xsl:with-param name="input-id"><xsl:value-of select="$input-id"/></xsl:with-param>
+      <xsl:with-param name="name"><xsl:value-of select="$name"/></xsl:with-param>
     </xsl:apply-templates>
   </xsl:template>
 
@@ -522,6 +553,7 @@ any attributes
 
   <xsl:template match="xs:simpleType/xs:restriction[not(child::node())]">
     <xsl:param name="input-id"/>
+    <xsl:param name="name"/>
 
     <xsl:variable name="typeName"><xsl:value-of select="@base"/></xsl:variable>
     <xsl:apply-templates select="//xs:simpleType[@name=$typeName]">
@@ -529,11 +561,12 @@ any attributes
       <!--<xsl:with-param name="input-name" select="@name"/>-->
     </xsl:apply-templates>
 
-    <xsl:message>@base<xsl:value-of select="@base"/></xsl:message>
+    <xsl:comment>@base=<xsl:value-of select="@base"/></xsl:comment>
 
     <xsl:apply-templates select="@base">
+      <xsl:with-param name="input-id" select="$input-id"/>
       <xsl:with-param name="id" select="$input-id"/>
-      <xsl:with-param name="name" select="@name"/>
+      <xsl:with-param name="name" select="$name"/>
     </xsl:apply-templates>
   </xsl:template>
 
@@ -745,6 +778,17 @@ any attributes
     <xsl:value-of select="@id"/>
   </xsl:template>
 
+  <xsl:template name="id-or-name-path">
+    <xsl:choose>
+      <xsl:when test="current()/ancestor-or-self::*[@id][1]/@id">
+        <xsl:value-of select="current()/ancestor-or-self::*[@id][1]/@id"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="name-path"/>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <!--URI (Uniform Resource Identifier) -->
   <xsl:template match="attribute::type[. = concat($ns,':','anyURI')]">
   </xsl:template>
@@ -758,7 +802,7 @@ any attributes
     <xsl:param name="id"><xsl:call-template name="create-id"/></xsl:param>
     <xsl:param name="name"><xsl:value-of select="current()"/></xsl:param>
 
-    <xsl:comment><xsl:value-of select="."/></xsl:comment>
+    <xsl:comment>attribute::type[. = concat($ns,':','boolean')] <xsl:value-of select="."/></xsl:comment>
 
     <xsl:element name="input"> <!-- use-attribute-sets="input-attributes"> -->
       <xsl:attribute name="id"><xsl:value-of select="$id"/></xsl:attribute>
@@ -796,9 +840,10 @@ any attributes
     <time datetime="2014-12-19">19. Dezember</time>
   </xsl:template>
 
-
   <!--Decimal numbers -->
   <xsl:template match="attribute::*[(name()='type' or name()='base') and substring-after(.,':') = 'decimal']">
+    <xsl:param name="input-id" />
+    <xsl:param name="name" />
     <!--
     decimal has the following ·constraining facets·:
 
@@ -812,27 +857,17 @@ any attributes
     minInclusive
     minExclusive
     -->
-    <xsl:param name="input-id"/>
-    <xsl:param name="name"><xsl:value-of select="current()"/></xsl:param>
+    <xsl:comment>"attribute::*[(name()='type' or name()='base') and substring-after(.,':') = 'decimal']"</xsl:comment>
 
-    <!--
-    <xsl:message><xsl:call-template name="name-path"/></xsl:message>
-    <xsl:comment><xsl:value-of select="."/></xsl:comment>
--->
-    <xsl:element name="label">
-      <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
-      <xsl:value-of select="$name"/>
-      <xsl:element name="input">
-        <xsl:attribute name="id" select="$input-id"/>
-        <xsl:attribute name="type">number</xsl:attribute>
-        <xsl:attribute name="name" select="$name"/>
-        <xsl:attribute name="min">100</xsl:attribute>
-        <xsl:attribute name="max">200</xsl:attribute>
-        <xsl:attribute name="step">1</xsl:attribute>
-        <xsl:attribute name="value">@name</xsl:attribute>
-      </xsl:element>
+    <xsl:element name="input">
+      <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
+      <xsl:attribute name="name"><xsl:value-of select="$name"/></xsl:attribute>
+      <xsl:attribute name="type">number</xsl:attribute>
+      <xsl:attribute name="min">80</xsl:attribute>
+      <xsl:attribute name="max">990</xsl:attribute>
+      <xsl:attribute name="step">1</xsl:attribute>
+      <xsl:attribute name="value">@name</xsl:attribute>
     </xsl:element>
-
   </xsl:template>
 
   <!--IEEE 64-bit floating-point -->
@@ -898,22 +933,23 @@ any attributes
 
   <!--Signed integers of arbitrary length -->
   <xsl:template match="attribute::*[. = concat($ns,':','integer')]">
-    <xsl:param name="id"><xsl:call-template name="create-id"/></xsl:param>
-    <xsl:param name="name" select="./@name" />
+    <xsl:param name="input-id"/><!--xsl:call-template name="create-id"/></xsl:param-->
+    <xsl:param name="name"/><!--xsl:call-template name="name-path"/></xsl:param-->
 
-    <xsl:message>#<xsl:call-template name="name-path"/></xsl:message>
-    <xsl:comment><xsl:value-of select="."/></xsl:comment>
+    <xsl:message><xsl:call-template name="name-path"/></xsl:message>
+    <xsl:comment>attribute::*[. = concat($ns,':','integer')] <xsl:value-of select="."/></xsl:comment>
+    <xsl:comment>$input-id=<xsl:value-of select="$input-id"/></xsl:comment>
     <xsl:element name="label">
-      <xsl:attribute name="for" select="$id"/>
+      <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
       <xsl:value-of select="$name"/>
       <xsl:element name="input">
-        <xsl:attribute name="id" select="$id"/>
+        <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
         <xsl:attribute name="type">number</xsl:attribute>
-        <xsl:attribute name="name" select="$name"/>
+        <xsl:attribute name="name"><xsl:value-of select="$name"/></xsl:attribute>
         <xsl:attribute name="min">100</xsl:attribute>
         <xsl:attribute name="max">200</xsl:attribute>
         <xsl:attribute name="step">1</xsl:attribute>
-        <xsl:attribute name="value">@name</xsl:attribute>
+        <xsl:attribute name="value">150</xsl:attribute>
       </xsl:element>
     </xsl:element>
   </xsl:template>
@@ -962,6 +998,8 @@ any attributes
   </xsl:template>
   <!--Any string -->
   <xsl:template match="attribute::*[. = concat($ns,':','string')]">
+    <xsl:param name="input-id"/>
+    <xsl:param name="name"/>
     <!--string has the following ·constraining facets·:
     length
     minLength
@@ -969,16 +1007,16 @@ any attributes
     pattern
     enumeration
     whiteSpace   -->
-    <xsl:param name="id"><xsl:call-template name="create-id"/></xsl:param>
-    <xsl:param name="name"><xsl:value-of select="current()"/></xsl:param>
+    <!--xsl:param name="input-id"/><xsl:call-template name="create-id"/></xsl:param-->
+    <!--xsl:param name="name"/><xsl:value-of select="current()"/></xsl:param-->
 
     <xsl:message><xsl:call-template name="name-path"/></xsl:message>
-    <xsl:comment><xsl:value-of select="."/></xsl:comment>
+    <xsl:comment>attribute::*[. = concat($ns,':','string')] <xsl:value-of select="."/></xsl:comment>
     <xsl:element name="label">
-      <xsl:attribute name="for" select="$id"/>
+      <xsl:attribute name="for" select="$input-id"/>
       <xsl:value-of select="$name"/>
       <xsl:element name="input">
-        <xsl:attribute name="id" select="$id"/>
+        <xsl:attribute name="id" select="$input-id"/>
         <xsl:attribute name="type">text</xsl:attribute>
         <xsl:attribute name="name" select="$name"/>
         <xsl:attribute name="value" select="$name"/>
@@ -996,7 +1034,22 @@ any attributes
   <xsl:template match="attribute::type[. = concat($ns,':','time')]">
   </xsl:template>
   <!--Whitespace-replaced and collapsed strings -->
-  <xsl:template match="attribute::type[. = concat($ns,':','token')]">
+  <xsl:template match="attribute::*[. = concat($ns,':','token')]">
+    <xsl:param name="input-id"/>
+    <xsl:param name="name"/>
+
+    <xsl:comment>attribute::type[. = concat($ns,':','token')]</xsl:comment>
+
+    <xsl:element name="label">
+      <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
+      <xsl:value-of select="$name"/>
+      <xsl:element name="input">
+        <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
+        <xsl:attribute name="type">text</xsl:attribute>
+        <xsl:attribute name="name"><xsl:value-of select="$name"/></xsl:attribute>
+        <xsl:attribute name="value">token</xsl:attribute>
+      </xsl:element>
+    </xsl:element>
   </xsl:template>
   <!--Unsigned value of 8 bits -->
   <xsl:template match="attribute::type[. = concat($ns,':','unsignedByte')]">

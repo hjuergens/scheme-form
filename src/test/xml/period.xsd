@@ -43,8 +43,6 @@
     <!--<xs:element id="jojo" name="bdc_with_id" type="xs:boolean"/>-->
     <!--<xs:element name="bdc" type="xs:date"/>-->
 
-    <xs:element name="firstname" id="fn" type="xs:integer"/>
-
     <!--
     <xs:simpleType name="jostring">
         <xs:annotation>
@@ -130,17 +128,31 @@
         </xs:sequence>
     </xs:complexType>
 
-    <!--xs:element name='intterm'>
+    <!--xs:element name="first-name" id="fn" type="xs:integer"/-->
+
+    <!--xs:simpleType name="res-int">
+        <xs:restriction base='xs:integer'/>
+    </xs:simpleType>
+    <xs:element name="second-int" id="si" type="res-int"/-->
+
+    <xs:element name='int-token'>
         <xs:simpleType>
-            <xs:union>
-                <xs:simpleType>
+            <xs:union id="union-id">
+                <xs:simpleType id="here-it-is">
                     <xs:restriction base='xs:integer'/>
                 </xs:simpleType>
                 <xs:simpleType>
-                    <xs:restriction base='termType'/>
+                    <xs:restriction base='xs:token'/>
+                </xs:simpleType>
+                <xs:simpleType>
+                    <xs:union>
+                        <xs:simpleType id="res-str">
+                            <xs:restriction base="xs:string"/>
+                        </xs:simpleType>
+                    </xs:union>
                 </xs:simpleType>
             </xs:union>
         </xs:simpleType>
-    </xs:element-->
+    </xs:element>
 
 </xs:schema>
