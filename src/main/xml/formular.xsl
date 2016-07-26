@@ -6,9 +6,8 @@
     Description: Transform Schema in Form.
 -->
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0"
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                xmlns="http://www.w3.org/1999/xhtml"
                 xml:lang="eng">
 
   <!-- xmlns:fn="http://www.w3.org/2005/xpath-functions" -->
@@ -62,7 +61,8 @@
         <title><xsl:value-of select="string(@targetNamespace)"/></title>
 
         <xsl:element name="meta" use-attribute-sets="meta-attributes"/>
-        <style>
+
+        <style type="css">
           .element {
             background-color: lightblue;
           }
@@ -457,7 +457,6 @@ any attributes
     <xsl:element name="input">
       <xsl:attribute name="type">
         <xsl:call-template name="formType">
-
           <xsl:with-param name="xsdType">
             <xsl:value-of select="@base"/>
           </xsl:with-param>
@@ -479,8 +478,9 @@ any attributes
     </xsl:element>
   </xsl:template>
 
-  <xsl:template match="xs:simpleType/xs:restriction[xs:enumeration]">
+  <xsl:template match="xs:simpleType/xs:restriction[child::xs:enumeration]">
     <xsl:param name="input-id"/>
+    <xsl:comment>xs:simpleType/xs:restriction[xs:enumeration]</xsl:comment>
 
     <xsl:text>
 
@@ -494,13 +494,10 @@ any attributes
           </xsl:with-param>
         </xsl:call-template>
       </xsl:attribute>
-
       <xsl:attribute name="class">form-control</xsl:attribute>
-
       <xsl:attribute name="id">
         <xsl:value-of select="$input-id"/>
       </xsl:attribute>
-
       <xsl:attribute name="placeholder">
         <xsl:value-of select="@base"/>
       </xsl:attribute>
@@ -519,7 +516,7 @@ any attributes
     </xsl:element>
   </xsl:template>
 
-  <xsl:template match="xs:simpleType/xs:restriction[attribute::base]">
+  <xsl:template match="xs:simpleType/xs:restriction[attribute::base and not(child::xs:enumeration)]">
     <xsl:param name="input-id"/><!--xsl:call-template name="create-id"/></xsl:param-->
     <xsl:param name="name"/><!--xsl:call-template name="name-path"/></xsl:param-->
     <xsl:comment>xs:simpleType/xs:restriction[attribute::base=<xsl:value-of select="@base" /> ]</xsl:comment>
@@ -651,7 +648,7 @@ any attributes
     <xsl:call-template name="input">
 
       <xsl:with-param name="input-id">
-        <xsl:value-of select="@name"/>
+        <xsl:value-of select="$input-id"/>
       </xsl:with-param>
 
       <xsl:with-param name="input-type">
@@ -694,11 +691,11 @@ any attributes
     lang 	NAME 		language code - a language code, as per [RFC1766]
   -->
   <xsl:attribute-set name="html-universal">
-    <xsl:attribute name="id" select="@id"/>
-    <xsl:attribute name="class" select="@class"/>
-    <xsl:attribute name="style" select="@style"/>
-    <xsl:attribute name="title" select="@title" />
-    <xsl:attribute name="lang" select="@lang"/>
+    <xsl:attribute name="id"><xsl:value-of select="@id"/></xsl:attribute>
+    <xsl:attribute name="class"><xsl:value-of  select="@class"/></xsl:attribute>
+    <xsl:attribute name="style"><xsl:value-of  select="@style"/></xsl:attribute>
+    <xsl:attribute name="title"><xsl:value-of  select="@title" /></xsl:attribute>
+    <xsl:attribute name="lang"><xsl:value-of  select="@lang"/></xsl:attribute>
   </xsl:attribute-set>
 
   <!--
@@ -750,11 +747,11 @@ any attributes
         <xsl:attribute name="href">
           <xsl:value-of select="@source"/>
         </xsl:attribute>
-
         <xsl:value-of select="@source"/>
       </xsl:element>
+
       <xsl:if test="current()"><p>
-        <xsl:value-of select="."/>
+        <xsl:value-of select="current()"/>
       </p></xsl:if>
     </div>
   </xsl:template>
@@ -932,7 +929,7 @@ any attributes
   </xsl:template>
 
   <!--Signed integers of arbitrary length -->
-  <xsl:template match="attribute::*[. = concat($ns,':','integer')]">
+  <xsl:template match="attribute::base|type[. = concat($ns,':','integer')]">
     <xsl:param name="input-id"/><!--xsl:call-template name="create-id"/></xsl:param-->
     <xsl:param name="name"/><!--xsl:call-template name="name-path"/></xsl:param-->
 
@@ -941,15 +938,20 @@ any attributes
     <xsl:comment>$input-id=<xsl:value-of select="$input-id"/></xsl:comment>
     <xsl:element name="label">
       <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
-      <xsl:value-of select="$name"/>
+      <xsl:value-of select="$name"/> <!-- TODO -->
+      <xsl:value-of select="../../xs:annotation/xs:appinfo/*[name()='label']/text()"/>
       <xsl:element name="input">
         <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
         <xsl:attribute name="type">number</xsl:attribute>
         <xsl:attribute name="name"><xsl:value-of select="$name"/></xsl:attribute>
-        <xsl:attribute name="min">100</xsl:attribute>
-        <xsl:attribute name="max">200</xsl:attribute>
         <xsl:attribute name="step">1</xsl:attribute>
-        <xsl:attribute name="value">150</xsl:attribute>
+        <xsl:attribute name="value"><xsl:value-of select="../../xs:annotation/xs:appinfo/*[name()='value']/text()"/></xsl:attribute>
+        <xsl:for-each select="parent::node()/xs:minInclusive">
+          <xsl:attribute name="min"><xsl:value-of select="attribute::value"/></xsl:attribute>
+        </xsl:for-each>
+        <xsl:for-each select="parent::node()/xs:maxInclusive">
+          <xsl:attribute name="max"><xsl:value-of select="attribute::value"/></xsl:attribute>
+        </xsl:for-each>
       </xsl:element>
     </xsl:element>
   </xsl:template>
@@ -1013,13 +1015,13 @@ any attributes
     <xsl:message><xsl:call-template name="name-path"/></xsl:message>
     <xsl:comment>attribute::*[. = concat($ns,':','string')] <xsl:value-of select="."/></xsl:comment>
     <xsl:element name="label">
-      <xsl:attribute name="for" select="$input-id"/>
+      <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
       <xsl:value-of select="$name"/>
       <xsl:element name="input">
-        <xsl:attribute name="id" select="$input-id"/>
+        <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
         <xsl:attribute name="type">text</xsl:attribute>
-        <xsl:attribute name="name" select="$name"/>
-        <xsl:attribute name="value" select="$name"/>
+        <xsl:attribute name="name"><xsl:value-of select="$name"/></xsl:attribute>
+        <xsl:attribute name="value"><xsl:value-of select="$name"/></xsl:attribute>
         <xsl:attribute name="length">@name</xsl:attribute>
         <xsl:attribute name="minLength">@name</xsl:attribute>
         <xsl:attribute name="maxLength">@name</xsl:attribute>

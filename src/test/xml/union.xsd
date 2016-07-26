@@ -81,6 +81,31 @@
         <!--</xs:complexType>-->
     <!--</xs:element>-->
 
+    <xs:simpleType name="termType">
+        <xs:annotation>
+            <xs:documentation>Term/Symbol</xs:documentation>
+        </xs:annotation>
+        <xs:union>
+            <xs:simpleType id="cardinal">
+                <xs:annotation><xs:appinfo><value>24</value></xs:appinfo></xs:annotation>
+                <xs:annotation><xs:appinfo><label>Cardinal</label></xs:appinfo></xs:annotation>
+                <xs:restriction base="xs:integer">
+                    <xs:minInclusive value="1"/>
+                    <xs:maxInclusive value="50"/>
+                </xs:restriction>
+            </xs:simpleType>
+            <xs:simpleType id="unit">
+                <xs:restriction base="xs:token">
+                    <xs:enumeration value="D"/>
+                    <xs:enumeration value="W"/>
+                    <xs:enumeration value="M"/>
+                    <xs:enumeration value="Y"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+
+    <xs:element name="maturity" type="termType"/>
 
     <!--xs:complexType name="termTypeSimple">
         <xs:sequence>
@@ -89,11 +114,49 @@
         </xs:sequence>
     </xs:complexType-->
 
+    <xs:complexType name="periodType">
+        <xs:annotation>
+            <xs:documentation>Range (seen @Bloomberg)</xs:documentation>
+            <xs:appinfo>Period</xs:appinfo>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="begin" type="termType"/>
+            <xs:element name="end">
+                <xs:complexType>
+                    <xs:choice>
+                        <xs:element name="endTerm" type="termType"/>
+                        <xs:element name="endDate" type="xs:date"/>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+
     <!--xs:element name="first-name" id="fn" type="xs:integer"/-->
 
     <!--xs:simpleType name="res-int">
         <xs:restriction base='xs:integer'/>
     </xs:simpleType>
     <xs:element name="second-int" id="si" type="res-int"/-->
+
+    <xs:element name='int-token'>
+        <xs:simpleType>
+            <xs:union id="union-id">
+                <xs:simpleType id="here-it-is">
+                    <xs:restriction base='xs:integer'/>
+                </xs:simpleType>
+                <xs:simpleType>
+                    <xs:restriction base='xs:token'/>
+                </xs:simpleType>
+                <xs:simpleType>
+                    <xs:union >
+                        <xs:simpleType id="res-str">
+                            <xs:restriction base="xs:string"/>
+                        </xs:simpleType>
+                    </xs:union>
+                </xs:simpleType>
+            </xs:union>
+        </xs:simpleType>
+    </xs:element>
 
 </xs:schema>
