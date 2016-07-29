@@ -62,7 +62,7 @@
 
         <xsl:element name="meta" use-attribute-sets="meta-attributes"/>
 
-        <style type="css">
+        <style type="text/css">
           .element {
             background-color: lightblue;
           }
@@ -148,20 +148,24 @@
     <xsl:value-of select="@id"/>
   </xsl:template>
 
+  <xsl:key name="simple-type-name" match="xs:simpleType" use="@name"/>
+  <xsl:key name="complex-type-name" match="xs:complexType" use="@name"/>
+
   <!-- Venetian Blind (Venezianischer Spiegel) -->
   <xsl:template match="xs:element[@type and not(starts-with(@type, concat($ns,':'))) and not(@ref)]">
     <xsl:param name="input-id"><xsl:apply-templates select="." mode="getId"/></xsl:param>
 
-    <xsl:message>
+    <!--xsl:message>
       <xsl:value-of select="$input-id"/>
-    </xsl:message>
+    </xsl:message-->
 
     <xsl:if test="not(@name)"><xsl:message>missing name in <xsl:copy-of select="current()"/></xsl:message></xsl:if>
     <xsl:comment>Venetian Blind (type='<xsl:value-of select="@type"/>',name='<xsl:value-of select="@name"/>)</xsl:comment>
 
-    <xsl:variable name="typeName" select="@type"/>
+    <!--xsl:variable name="typeName" select="@type"/-->
 
-    <xsl:apply-templates select="//xs:simpleType[@name=$typeName] | //xs:complexType[@name=$typeName]">
+    <!--xsl:apply-templates select="//xs:simpleType[@name=$typeName] | //xs:complexType[@name=$typeName]"-->
+    <xsl:apply-templates select="key('simple-type-name', @type) | key('complex-type-name', @type)">
       <xsl:with-param name="input-id" select="$input-id"/>
       <xsl:with-param name="name" select="@name"/>
       <xsl:with-param name="legendText" select="@name"/>
@@ -199,8 +203,10 @@
     <xsl:element name="label">
       <xsl:attribute name="for"><xsl:value-of select="$input-id"/></xsl:attribute>
       <!--<xsl:value-of select="$name"/>-->
-      <xsl:for-each select="ancestor-or-self::*/@name"><xsl:value-of select="concat( ' ', concat(translate(substring(.,1,1), $vLower, $vUpper),substring(., 2)) )"/></xsl:for-each>
-      <!--concat(translate(substring(.,1,1), $vLower, $vUpper),substring(., 2))-->
+      <!--<xsl:for-each select="ancestor-or-self::*/@name"><xsl:value-of select="concat( ' ', concat(translate(substring(.,1,1), $vLower, $vUpper),substring(., 2)) )"/></xsl:for-each>-->
+      <xsl:for-each select="self::*/@name">
+        <xsl:value-of select="concat(translate(substring(.,1,1), $vLower, $vUpper),substring(., 2))"/>
+      </xsl:for-each>
       <xsl:apply-templates select="$xmlSchema/xs:simpleType[@name=$typeName]">
           <xsl:with-param name="input-id"><xsl:value-of select="$input-id"/></xsl:with-param>
           <xsl:with-param name="name"><xsl:value-of select="$name"/></xsl:with-param>
@@ -213,12 +219,12 @@
   <xsl:template match="xs:element[not(@type) and not(@ref)]">
     <xsl:param name="input-id"><xsl:apply-templates select="." mode="getId"/></xsl:param>
 
-    <xsl:if test="not(@name)"><xsl:message>missing name in <xsl:copy-of select="current()"/></xsl:message></xsl:if>
-    <xsl:comment>Russian Doll (name='<xsl:value-of select="@name"/>', input-id='<xsl:value-of select="$input-id"/>')</xsl:comment>
-
     <xsl:variable name="name">
       <xsl:value-of select="concat(translate(substring(@name,1,1), $vLower, $vUpper),substring(@name, 2))"/>
     </xsl:variable>
+
+    <xsl:if test="not(@name)"><xsl:message>missing name in <xsl:copy-of select="current()"/></xsl:message></xsl:if>
+    <xsl:comment>Russian Doll (name='<xsl:value-of select="$name"/>', input-id='<xsl:value-of select="$input-id"/>')</xsl:comment>
 
     <xsl:apply-templates select="child::node()">
       <xsl:with-param name="input-id" select="$input-id"/>
@@ -365,7 +371,9 @@ any attributes
 
     <!--xsl:apply-templates select="xs:annotation"/-->
 
-    <xsl:comment>simpleType(input-id='<xsl:value-of select="$input-id"/>', name='<xsl:value-of select="$name"/>')</xsl:comment>
+    <xsl:comment>
+      simpleType(input-id='<xsl:value-of select="$input-id"/>', name='<xsl:value-of select="$name"/>')
+    </xsl:comment>
 
     <xsl:apply-templates select="xs:restriction | xs:list | xs:union">
       <xsl:with-param name="input-id"><xsl:value-of select="$input-id"/></xsl:with-param>
@@ -536,7 +544,9 @@ any attributes
       <xsl:call-template name="name-path"/>
     </xsl:param>
 
-    <xsl:comment>xs:restriction[@base='xs:anySimpleType']</xsl:comment>
+    <xsl:comment>
+      xs:restriction[@base='xs:anySimpleType']
+    </xsl:comment>
 
     <xsl:element name="input">
       <xsl:attribute name="type">text</xsl:attribute>
@@ -567,15 +577,34 @@ any attributes
     </xsl:apply-templates>
   </xsl:template>
 
+  <xsl:template match="xs:simpleType/xs:list[not(child::node())]">
+    <xsl:param name="input-id"/>
+    <xsl:param name="name"/>
+
+    <xsl:variable name="typeName"><xsl:value-of select="@base"/></xsl:variable>
+    <xsl:apply-templates select="//xs:simpleType[@name=$typeName]">
+      <xsl:with-param name="input-id" select="$input-id" />
+      <!--<xsl:with-param name="input-name" select="@name"/>-->
+    </xsl:apply-templates>
+
+    <xsl:comment>@base=<xsl:value-of select="@base"/></xsl:comment>
+
+    <xsl:apply-templates select="@base">
+      <xsl:with-param name="input-id" select="$input-id"/>
+      <xsl:with-param name="id" select="$input-id"/>
+      <xsl:with-param name="name" select="$name"/>
+    </xsl:apply-templates>
+  </xsl:template>
+
   <!-- (annotation?,(simpleContent|complexContent|((group|all|choice|sequence)?,((attribute|attributeGroup)*,anyAttribute?)))) -->
   <xsl:template match="xs:complexType">
     <xsl:param name="input-id"/>
-    <xsl:param name="input-name"/>
-    <xsl:param name="legendText" select="$input-name"/>
+    <xsl:param name="name"/>
+    <xsl:param name="legendText" select="$name"/>
 
     <xsl:element name="fieldset">
       <xsl:attribute name="form"><xsl:value-of select="$form-id"/></xsl:attribute>
-      <xsl:attribute name="name"><xsl:value-of select="$input-name"/></xsl:attribute>
+      <xsl:attribute name="name"><xsl:value-of select="$name"/></xsl:attribute>
       <xsl:attribute name="id"><xsl:value-of select="$input-id"/></xsl:attribute>
 
       <xsl:element name="legend"><xsl:value-of select="$legendText"/></xsl:element>
@@ -625,19 +654,83 @@ any attributes
     <xsl:element name="ul">
       <xsl:if test="@id">
         <xsl:attribute name="id">
-          div-<xsl:value-of select="@id"/>
+          sequ-<xsl:value-of select="@id"/>
         </xsl:attribute>
       </xsl:if>
 
       <xsl:attribute name="class">sequence</xsl:attribute>
 
-      <xsl:for-each select="child::node()">
-        <xsl:element name="li">
+      <xsl:for-each select="*"> <!-- "descendant::node()"> < "./*"> <select="child::node()">-->
+        <xsl:comment><xsl:value-of select="@name"/></xsl:comment>
+
+        <xsl:variable name="li-min-count">
+          <xsl:choose>
+            <xsl:when test="attribute::minOccurs"><xsl:value-of select="attribute::minOccurs"/></xsl:when>
+            <xsl:when test="attribute::minOccurs[. = 'unbounded']">255</xsl:when>
+            <xsl:when test="parent::*/attribute::minOccurs"><xsl:value-of select="parent::*/attribute::minOccurs"/></xsl:when>
+            <xsl:when test="parent::*/attribute::minOccurs[. = 'unbounded']">255</xsl:when>
+            <xsl:otherwise>1</xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+        <xsl:variable name="li-max-count">
+          <xsl:choose>
+            <xsl:when test="ancestor-or-self::*/attribute::maxOccurs">
+              <xsl:variable name="maxStr" >
+                <xsl:value-of select="ancestor-or-self::*/attribute::maxOccurs[1]"/>
+              </xsl:variable>
+              <xsl:choose>
+                <xsl:when test="$maxStr = 'unbounded'">256</xsl:when>
+                <xsl:otherwise><xsl:value-of select="$maxStr"/></xsl:otherwise>
+              </xsl:choose>
+            </xsl:when>
+            <xsl:otherwise>1</xsl:otherwise>
+          </xsl:choose>
+
+        </xsl:variable>
+
+        <xsl:call-template name="li">
+          <xsl:with-param name="k" select="$li-min-count"/>
+          <xsl:with-param name="n" select="$li-max-count"/>
+        </xsl:call-template>
+
+        <!--xsl:element name="li">
           <xsl:attribute name="value"><xsl:value-of select="attribute::name"/></xsl:attribute>
+          <xsl:for-each select="attribute::minOccurs">
+            <xsl:attribute name="minOccurs"><xsl:value-of select="current()"/></xsl:attribute>
+          </xsl:for-each>
           <xsl:apply-templates select="current()"/>
-        </xsl:element>
+        </xsl:element-->
       </xsl:for-each>
     </xsl:element>
+  </xsl:template>
+
+  <xsl:template name="li">
+    <xsl:param name="k"/>
+    <xsl:param name="n"/>
+    <xsl:comment>total=<xsl:value-of select="$n"/>;hidden=<xsl:value-of select="$k"/></xsl:comment>
+    <xsl:element name="li">
+      <xsl:attribute name="value"><xsl:value-of select="attribute::name"/></xsl:attribute>
+      <xsl:if test="0 >= number($k)">
+        <xsl:attribute name="hidden" />
+      </xsl:if>
+      <xsl:apply-templates select="current()">
+        <xsl:with-param name="input-id">
+          <xsl:apply-templates select="." mode="getId"/>-<xsl:value-of select="$n"/>
+        </xsl:with-param>
+      </xsl:apply-templates>
+      <xsl:element name="button">
+        <xsl:attribute name="type">button</xsl:attribute>
+        <xsl:attribute name="onclick">alert('How to add an element?');</xsl:attribute>
+        <xsl:attribute name="autofocus"/>
+        add
+      </xsl:element>
+    </xsl:element>
+    <xsl:if test="number($n) >1">
+      <xsl:call-template name="li">
+        <xsl:with-param name="k" select="number($k)-1"/>
+        <xsl:with-param name="n" select="number($n)-1"/>
+    </xsl:call-template>
+    </xsl:if>
   </xsl:template>
 
   <!-- field == simpleType -->
@@ -741,8 +834,10 @@ any attributes
     </documentation>
    -->
   <xsl:template match="xs:documentation">
-    <div class="documentation">
+    <xsl:element name="details">
+      <xsl:attribute name="class">documentation</xsl:attribute>
 
+      <xsl:element name="summary"></xsl:element>
       <xsl:element name="a">
         <xsl:attribute name="href">
           <xsl:value-of select="@source"/>
@@ -753,7 +848,7 @@ any attributes
       <xsl:if test="current()"><p>
         <xsl:value-of select="current()"/>
       </p></xsl:if>
-    </div>
+    </xsl:element>
   </xsl:template>
 
   <xsl:template match="attribute::source">
