@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="formular.xsl"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://hajuergens.github.io"
+           targetNamespace="http://hajuergens.github.io"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+    <!--xs:element name="period-and-term">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="period" type="periodType"/>
+
+                <xs:element name="tenor" type="termType"/>
+            </xs:sequence>
+            <xs:attribute name="schema" type="xs:anyURI" use="required" fixed="http://json-schema.org/draft-04/schema#"/>
+        </xs:complexType>
+    </xs:element-->
+
+    <!--xs:element name="end">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element name="endTerm" type="termType"/>
+                <xs:element name="endDate" type="xs:date"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element-->
+
+    <!--<xs:element name="First_Term" type="termType" />-->
+    <!--<xs:element name="Second_Term" type="periodType" />-->
+    <!--<xs:element ref="Second_Term"/>-->
+
+    <!--xs:element name="calendarContext">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element id="thisisanid" name="bdc_in" type="xs:boolean"/>
+                <xs:element ref="eom_in"/>
+                <xs:element name="SimpleTermType" type="termTypeSimple"/>
+                <xs:element name="TermType" type="termType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element-->
+    <!--<xs:element id="jojo" name="bdc_with_id" type="xs:boolean"/>-->
+    <!--<xs:element name="bdc" type="xs:date"/>-->
+
+    <!--
+    <xs:simpleType name="jostring">
+        <xs:annotation>
+            <xs:appinfo xmlns:hfp="http://www.w3.org/2001/XMLSchema-hasFacetAndProperty">
+                <hfp:hasFacet name="length"/>
+            </xs:appinfo>
+            <xs:documentation
+                    source="http://www.w3.org/TR/xmlschema-2/#string"/>
+        </xs:annotation>
+        <xs:restriction base="xs:anySimpleType">
+            <xs:whiteSpace value="preserve" id="string.preserve"/>
+        </xs:restriction>
+    </xs:simpleType>
+    -->
+
+    <!--<xs:element name="restrictedInteger">-->
+        <!--<xs:annotation>-->
+            <!--<xs:appinfo source="http://hjuergens.github.io/">-->
+                <!--<gg>ff</gg>-->
+            <!--</xs:appinfo>-->
+        <!--</xs:annotation>-->
+        <!--<xs:simpleType>-->
+            <!--<xs:restriction base='xs:integer'/>-->
+        <!--</xs:simpleType>-->
+    <!--</xs:element>-->
+    <!--<xs:element name="simpleInteger" type="xs:integer"/>-->
+
+    <!-- The all element specifies that the child elements can appear in any order
+    and that each child element can occur zero or one time. -->
+    <xs:element name="person">
+        <xs:complexType>
+            <xs:all>
+                <xs:element name="firstName" type="xs:string"/>
+                <xs:element name="lastName" type="xs:string"/>
+            </xs:all>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

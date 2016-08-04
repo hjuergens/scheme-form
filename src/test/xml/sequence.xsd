@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="formular.xsl"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://hajuergens.github.io"
+           targetNamespace="http://hajuergens.github.io"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+<!--
+<sequence
+id=ID
+maxOccurs=nonNegativeInteger|unbounded
+minOccurs=nonNegativeInteger
+any attributes
+>
+
+(annotation?,(element|group|choice|sequence|any)*)
+
+</sequence>
+-->
+
+    <xs:element name="personinfo">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="firstname" type="xs:string"/>
+                <xs:element name="lastname" type="xs:string"/>
+                <xs:element name="address" type="xs:string"/>
+                <xs:element name="city" type="xs:string"/>
+                <xs:element name="country" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="pets">
+        <xs:complexType>
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="dog" type="xs:string"/>
+                <xs:element name="cat" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="zoo">
+        <xs:complexType>
+            <xs:sequence minOccurs="2" maxOccurs="3">
+                <xs:element name="monkey" type="animal-string" minOccurs="1" maxOccurs="2"/>
+                <xs:element name="pelican" type="xs:string" maxOccurs="3"/>
+                <xs:element name="elephant" type="xs:string" minOccurs="1" />
+                <xs:element name="tiger" type="xs:string" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="animal-string">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="30"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>
